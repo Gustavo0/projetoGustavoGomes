@@ -2,9 +2,6 @@ package com.ciet.projetoGustavoGomes.controller;
 
 import static com.jayway.restassured.module.mockmvc.RestAssuredMockMvc.given;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,9 +10,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import com.ciet.projetoGustavoGomes.config.AbstractTestJUnit;
+import com.ciet.projetoGustavoGomes.dsl.Dsl;
 import com.ciet.projetoGustavoGomes.entity.Bebida;
 import com.ciet.projetoGustavoGomes.entity.TipoBebida;
-import com.ciet.projetoGustavoGomes.repository.BebidaRepository;
 import com.jayway.restassured.http.ContentType;
 
 @WebAppConfiguration
@@ -23,18 +20,15 @@ import com.jayway.restassured.http.ContentType;
 public class BebidaControllerTest extends AbstractTestJUnit{
 	
 	@Autowired
-	private BebidaRepository bebidaRepository;
+	private Dsl dsl;
 	
 	@Test
 	public void cadastroCreatedTest() {
-		String requestBody = "{\"tipoBebida\": \"CERVEJA\", \"isAlcoolica\": true, \"marca\": \"QUALQUER\"}";
-		
-		Bebida bebida = criaBebida(TipoBebida.CERVEJA, true);
-		bebidaRepository.save(bebida);
+		Bebida bebida = dsl.dadoUmaBebidaCadastrada(TipoBebida.CERVEJA, true, "QUALQUER");
 		
 		Bebida bebidaCadastrada = given()
 									.contentType(ContentType.JSON)
-									.body(requestBody)
+									.body(dsl.dadoUmaRequestBody(true))
 									.when()
 										.post("/bebidas")
 									.then()
@@ -46,21 +40,11 @@ public class BebidaControllerTest extends AbstractTestJUnit{
 		Assert.assertEquals(bebidaCadastrada.getTipoBebida(), bebida.getTipoBebida());
 	}
 
-	private Bebida criaBebida(TipoBebida tipoBebida, boolean isAlcoolica) {
-		Bebida bebida = Bebida.builder().tipoBebida(tipoBebida).isAlcoolica(isAlcoolica).build();
-		return bebida;
-	}
-	
 	@Test
 	public void cadastroNOkTest() {
-		String requestBody = "{\"tipoBebida\": \"CERVEJA\", \"isAlcoolica\": true, \"marca\": \"AAAAAAAAAAA\"}";
-		
-		Bebida bebida = criaBebida(TipoBebida.CERVEJA, true);
-		bebidaRepository.save(bebida);
-		
 		given()
 		.contentType(ContentType.JSON)
-		.body(requestBody)
+		.body(dsl.dadoUmaRequestBody(false))
 		.when()
 			.post("/bebidas")
 		.then()
@@ -72,11 +56,7 @@ public class BebidaControllerTest extends AbstractTestJUnit{
 	
 	@Test
 	public void buscaBebidasTest() {
-		Bebida bebida = criaBebida(TipoBebida.CERVEJA, true);
-		
-		List<Bebida> bebidas = new ArrayList<Bebida>();
-		bebidas.add(bebida);
-		bebidaRepository.save(bebida);
+		dsl.dadoUmaBebidaCadastrada(TipoBebida.CERVEJA, true, "QUALQUER");
 		
 		given()
 		.when()
@@ -89,8 +69,7 @@ public class BebidaControllerTest extends AbstractTestJUnit{
 	
 	@Test
 	public void buscaBebidaPorNomeTest() {
-		Bebida bebida = criaBebida(TipoBebida.CERVEJA, true);
-		bebidaRepository.save(bebida);
+		dsl.dadoUmaBebidaCadastrada(TipoBebida.CERVEJA, true, "QUALQUER");
 		
 		given()
 			.queryParam("tipoBebida", "CERVEJA")
